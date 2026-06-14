@@ -113,3 +113,26 @@ output "cluster_endpoint" {
 output "cluster_version" {
   value = aws_eks_cluster.demo.version
 }
+
+# ── Remote State Backend (S3 + DynamoDB) ────────────────────────
+resource "aws_s3_bucket" "tfstate" {
+  bucket = "terraform-state-bucket"
+}
+
+resource "aws_s3_bucket_versioning" "tfstate" {
+  bucket = aws_s3_bucket.tfstate.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_dynamodb_table" "tfstate_lock" {
+  name         = "terraform-state-lock"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+}
